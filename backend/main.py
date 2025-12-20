@@ -11,10 +11,7 @@ import os
 
 load_dotenv()
 
-ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS')
-
-print(ALLOWED_ORIGINS)
-
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS")
 origins = ALLOWED_ORIGINS.split(",")
 
 app = FastAPI()
@@ -31,28 +28,60 @@ class Image(BaseModel):
     image: List[List[float]]
 
 
-transform = transforms.Compose([
-    transforms.Resize(size=(28, 28), antialias=True),
-])
+transform = transforms.Compose(
+    [
+        transforms.Resize(size=(28, 28), antialias=True),
+    ]
+)
 
 
 class CNN(nn.Module):
     def __init__(self, l1=1000, l2=500) -> None:
         super(CNN, self).__init__()
-        self.conv1_1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
-        self.conv1_2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
+        self.conv1_1 = nn.Conv2d(
+            in_channels=1,
+            out_channels=64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
+        self.conv1_2 = nn.Conv2d(
+            in_channels=64,
+            out_channels=64,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
 
-        self.conv2_1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
-        self.conv2_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
+        self.conv2_1 = nn.Conv2d(
+            in_channels=64,
+            out_channels=128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
+        self.conv2_2 = nn.Conv2d(
+            in_channels=128,
+            out_channels=128,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
 
-        self.conv3_1 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
-        self.conv3_2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(
-            3, 3), stride=(1, 1), padding=(1, 1))
+        self.conv3_1 = nn.Conv2d(
+            in_channels=128,
+            out_channels=256,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
+        self.conv3_2 = nn.Conv2d(
+            in_channels=256,
+            out_channels=256,
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
+        )
 
         self.pool = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
         self.droupout = nn.Dropout(0.5)
@@ -81,22 +110,22 @@ def get_activation(layer_name):
     return hook
 
 
-cnn = CNN(l1=1024, l2=256)
-cnn.load_state_dict(torch.load("./train_model.pt",
-                    map_location="cpu", weights_only=True))
+cnn = CNN(l1=512, l2=512)
+cnn.load_state_dict(
+    torch.load("./train_model.pt", map_location="cpu", weights_only=True)
+)
 cnn.eval()
 softmax = nn.Softmax(dim=1)
 
-conv_layers = ['conv1_1', 'conv1_2',
-               'conv2_1', 'conv2_2', 'conv3_1', 'conv3_2']
-cnn.conv1_1.register_forward_hook(get_activation('conv1_1'))
-cnn.conv1_2.register_forward_hook(get_activation('conv1_2'))
+conv_layers = ["conv1_1", "conv1_2", "conv2_1", "conv2_2", "conv3_1", "conv3_2"]
+cnn.conv1_1.register_forward_hook(get_activation("conv1_1"))
+cnn.conv1_2.register_forward_hook(get_activation("conv1_2"))
 
-cnn.conv2_1.register_forward_hook(get_activation('conv2_1'))
-cnn.conv2_2.register_forward_hook(get_activation('conv2_2'))
+cnn.conv2_1.register_forward_hook(get_activation("conv2_1"))
+cnn.conv2_2.register_forward_hook(get_activation("conv2_2"))
 
-cnn.conv3_1.register_forward_hook(get_activation('conv3_1'))
-cnn.conv3_2.register_forward_hook(get_activation('conv3_2'))
+cnn.conv3_1.register_forward_hook(get_activation("conv3_1"))
+cnn.conv3_2.register_forward_hook(get_activation("conv3_2"))
 
 
 def convert_to_255(tensor):
@@ -128,16 +157,22 @@ async def classify(image: Image):
         predicted = torch.argmax(probas).item()
     for conv_layer in conv_layers:
         for i in range(activations[conv_layer].shape[0]):
-            activations[conv_layer][i] = convert_to_255(
-                activations[conv_layer][i])
+            activations[conv_layer][i] = convert_to_255(activations[conv_layer][i])
 
         activations[conv_layer] = activations[conv_layer].to(torch.uint8)
 
-    return JSONResponse(status_code=200, content={"probas": probas.view(-1).tolist(), "predicted": predicted, "activations": {
-        "conv1_1": activations['conv1_1'].tolist(),
-        "conv1_2": activations['conv1_2'].tolist(),
-        "conv2_1": activations['conv2_1'].tolist(),
-        "conv2_2": activations['conv2_2'].tolist(),
-        "conv3_1": activations['conv3_1'].tolist(),
-        "conv3_2": activations['conv3_2'].tolist(),
-    }})
+    return JSONResponse(
+        status_code=200,
+        content={
+            "probas": probas.view(-1).tolist(),
+            "predicted": predicted,
+            "activations": {
+                "conv1_1": activations["conv1_1"].tolist(),
+                "conv1_2": activations["conv1_2"].tolist(),
+                "conv2_1": activations["conv2_1"].tolist(),
+                "conv2_2": activations["conv2_2"].tolist(),
+                "conv3_1": activations["conv3_1"].tolist(),
+                "conv3_2": activations["conv3_2"].tolist(),
+            },
+        },
+    )
