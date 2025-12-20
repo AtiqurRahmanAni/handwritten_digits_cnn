@@ -96,7 +96,7 @@ const Canvas = ({ classify, loading = false }) => {
           <h3>Draw digit here (one digit)</h3>
         </div>
         <canvas
-          className="shadow-sm w-[250px] h-[250px] border-2"
+          className="shadow-xs w-62.5 h-62.5 border-2"
           ref={canvasRef}
           onMouseDown={startDrawing}
           onMouseUp={finishDrawing}
