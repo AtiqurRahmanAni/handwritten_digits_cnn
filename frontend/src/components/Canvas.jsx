@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ModelPreview from "./ModelPreview";
 
 const Canvas = ({ classify, loading = false }) => {
@@ -26,7 +26,7 @@ const Canvas = ({ classify, loading = false }) => {
     ctx.scale(1, 1);
   }, []);
 
-  const onMouseLeave = (event) => {
+  const onMouseLeave = () => {
     setIsDrawing(false);
   };
 
@@ -37,7 +37,7 @@ const Canvas = ({ classify, loading = false }) => {
     setIsDrawing(true);
   };
 
-  const finishDrawing = (event) => {
+  const finishDrawing = () => {
     canvasContextRef.current.closePath();
     setIsDrawing(false);
   };
